@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>NCHRP 25-78 — Long-Term Mobility Comparison Tool (Mock Prototype)</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#12223a; --muted:#5b6b82;
+      --border:#dbe3ef; --accent:#1d4ed8; --shadow: 0 10px 24px rgba(18,34,58,.08);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:18px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+    h1{ margin:0 0 6px 0; font-size:1.35rem; }
+    p{ margin:6px 0 14px 0; color:var(--muted); line-height:1.4; }
+    .grid{
+      display:grid;
+      grid-template-columns: 380px 1fr;
+      gap:14px;
+      align-items:start;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    label{ display:block; font-weight:800; margin-top:10px; }
+    select{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#fff;
+      margin-top:6px;
+      font-size:0.95rem;
+    }
+    .row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .kpis{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:12px;
+    }
+    .kpi{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px;
+      background: rgba(18,34,58,.02);
+    }
+    .kpi .title{ color:var(--muted); font-weight:800; font-size:0.86rem; }
+    .kpi .value{ font-weight:900; font-size:1.15rem; margin-top:4px; }
+    .kpi .delta{ color:var(--muted); margin-top:4px; font-size:0.9rem; }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:10px;
+      font-size:0.94rem;
+    }
+    th, td{
+      border-top:1px solid var(--border);
+      padding:8px 6px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{ color:var(--muted); font-weight:900; }
+    .muted{ color:var(--muted); }
+    details{
+      margin-top:12px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px 12px;
+      background: rgba(18,34,58,.02);
+    }
+    summary{ cursor:pointer; font-weight:900; }
+    .note{
+      margin-top:12px;
+      border-left:4px solid #f59e0b;
+      background: rgba(245,158,11,.10);
+      padding:10px 12px;
+      border-radius:12px;
+      color:var(--muted);
+      line-height:1.35;
+      font-size:0.92rem;
+    }
+    .pill{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-weight:800;
+      font-size:0.8rem;
+      color:var(--muted);
+      margin-left:6px;
+    }
+    .subtitle{ font-weight:800; margin:0; }
+    .hide{ display:none; }
+  </style>
+</head>
+<body>
+  <h1>NCHRP 25-78 — Decision-Support Tool Mock (Long-Term Mobility Comparisons)</h1>
+  <p>
+    Mock prototype demonstrating two comparison modes:
+    <b>(1) within-state year-to-year</b> (e.g., 2011 vs 2017) and
+    <b>(2) between-state cross-section</b> (e.g., Texas vs Oregon in 2017),
+    using long-term mobility datasets (placeholders).
+  </p>
+
+  <div class="grid">
+    <!-- Inputs -->
+    <div class="card">
+      <div class="subtitle">Inputs</div>
+
+      <label for="dataset">Dataset</label>
+      <select id="dataset"></select>
+
+      <label for="compareType">Comparison Type</label>
+      <select id="compareType">
+        <option value="within" selected>Within a state (Year A vs Year B)</option>
+        <option value="between">Between states (State A vs State B, same year)</option>
+      </select>
+
+      <!-- Within-state controls -->
+      <div id="withinControls">
+        <label for="stateWithin">State</label>
+        <select id="stateWithin"></select>
+
+        <div class="row">
+          <div>
+            <label for="yearA">Baseline Year (A)</label>
+            <select id="yearA"></select>
+          </div>
+          <div>
+            <label for="yearB">Comparison Year (B)</label>
+            <select id="yearB"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Between-state controls -->
+      <div id="betweenControls" class="hide">
+        <div class="row">
+          <div>
+            <label for="stateA">State A</label>
+            <select id="stateA"></select>
+          </div>
+          <div>
+            <label for="stateB">State B</label>
+            <select id="stateB"></select>
+          </div>
+        </div>
+
+        <label for="yearBetween">Year</label>
+        <select id="yearBetween"></select>
+      </div>
+
+      <details open>
+        <summary>Panel-friendly annotations (what these mean for resilience)</summary>
+        <div class="muted" style="margin-top:8px; line-height:1.35;">
+          <b>Avg trip frequency</b> (trips/person/day) — proxy for continuity of activity participation and access to essentials.<br><br>
+          <b>Avg travel time</b> (min/person/day) — proxy for system stress and burden; increases can reflect detours, congestion, service disruption, or slower recovery.<br><br>
+          <b>Mode share</b> — proxy for multimodal redundancy and adaptive capacity; shifts can indicate reliance on (or loss of) alternatives.
+        </div>
+      </details>
+
+      <div class="note">
+        <b>Prototype note:</b> values are randomly generated placeholders (stable per dataset/state/year) to illustrate workflow.
+        In the full tool, these will be replaced with weighted dataset estimates and documented definitions.
+      </div>
+    </div>
+
+    <!-- Outputs -->
+    <div class="card">
+      <div class="subtitle">Outputs <span class="pill" id="contextPill"></span></div>
+
+      <div class="kpis" id="kpiWrap"></div>
+
+      <div style="margin-top:12px;">
+        <div class="subtitle">Mode share comparison</div>
+        <div class="muted" style="margin-top:6px;">Values shown as percentages. Output updates when inputs change.</div>
+        <div id="modeTable"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ----------------------------
+  // 1) Prototype scope
+  // ----------------------------
+  const STATES = ["Texas", "California", "Florida", "Ohio", "Oregon", "Virginia"];
+
+  // Add 2–3 additional dataset options (as in your proposal examples)
+  // Keep the prototype simple: each dataset has its own "available years" list (placeholder)
+  const DATASETS = [
+    { id: "NHTS", name: "NHTS (National Household Travel Survey)", years: [2001, 2009, 2011, 2017, 2022] },
+    { id: "NPTS", name: "NPTS (National Personal Transportation Survey)", years: [1977, 1983, 1990, 1995] },
+    { id: "PSRC", name: "PSRC Household Travel Survey (Puget Sound)", years: [2017, 2019, 2021, 2023] },
+    { id: "CMS",  name: "NYC DOT Citywide Mobility Survey (CMS)", years: [2017, 2018, 2019, 2020, 2022, 2024] }
+  ];
+
+  const MODES = ["Drive", "Transit", "Walk", "Bike", "Other"];
+
+  // Elements
+  const elDataset = document.getElementById("dataset");
+  const elCompareType = document.getElementById("compareType");
+
+  const withinControls = document.getElementById("withinControls");
+  const betweenControls = document.getElementById("betweenControls");
+
+  const elStateWithin = document.getElementById("stateWithin");
+  const elYearA = document.getElementById("yearA");
+  const elYearB = document.getElementById("yearB");
+
+  const elStateA = document.getElementById("stateA");
+  const elStateB = document.getElementById("stateB");
+  const elYearBetween = document.getElementById("yearBetween");
+
+  const elKpiWrap = document.getElementById("kpiWrap");
+  const elModeTable = document.getElementById("modeTable");
+  const elContextPill = document.getElementById("contextPill");
+
+  // ----------------------------
+  // 2) Deterministic pseudo-random generator (stable per dataset/state/year)
+  // ----------------------------
+  function hashStringToInt(str){
+    let h = 2166136261;
+    for (let i=0; i<str.length; i++){
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+  function mulberry32(seed){
+    return function(){
+      let t = seed += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+  }
+  function randBetween(rng, a, b){ return a + (b-a)*rng(); }
+
+  // ----------------------------
+  // 3) Generate mock metrics for dataset + state + year
+  // ----------------------------
+  function getMetrics(datasetId, state, year){
+    const rng = mulberry32(hashStringToInt(datasetId + "|" + state + "|" + year));
+
+    const avgTrips = +(randBetween(rng, 3.0, 4.8).toFixed(2));   // trips/person/day
+    const avgTime  = +(randBetween(rng, 55, 95).toFixed(1));     // min/person/day
+
+    // Mode shares (sum to 1)
+    let drive   = randBetween(rng, 0.62, 0.82);
+    let transit = randBetween(rng, 0.03, 0.12);
+    let walk    = randBetween(rng, 0.04, 0.12);
+    let bike    = randBetween(rng, 0.01, 0.05);
+    let other   = Math.max(0.01, 1 - (drive + transit + walk + bike));
+
+    const total = drive + transit + walk + bike + other;
+    drive/=total; transit/=total; walk/=total; bike/=total; other/=total;
+
+    return {
+      avgTrips,
+      avgTime,
+      mode: { Drive: drive, Transit: transit, Walk: walk, Bike: bike, Other: other }
+    };
+  }
+
+  // ----------------------------
+  // 4) UI helpers
+  // ----------------------------
+  function populateSelect(el, values, selected){
+    el.innerHTML = "";
+    values.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = v;
+      if (String(v) === String(selected)) opt.selected = true;
+      el.appendChild(opt);
+    });
+  }
+  function populateDatasetSelect(){
+    elDataset.innerHTML = "";
+    DATASETS.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d.id;
+      opt.textContent = d.name;
+      elDataset.appendChild(opt);
+    });
+    elDataset.value = "NHTS";
+  }
+  function pct(x){ return (x*100).toFixed(1) + "%"; }
+  function signed(x, digits=2){
+    const s = x > 0 ? "+" : "";
+    return s + x.toFixed(digits);
+  }
+
+  function getSelectedDataset(){
+    return DATASETS.find(d => d.id === elDataset.value);
+  }
+
+  function syncYearDropdowns(){
+    const ds = getSelectedDataset();
+    const ys = ds.years.slice(); // list
+
+    // within mode
+    populateSelect(elYearA, ys, ys.includes(2011) ? 2011 : ys[0]);
+    populateSelect(elYearB, ys, ys.includes(2017) ? 2017 : ys[Math.min(1, ys.length-1)]);
+
+    // between mode
+    populateSelect(elYearBetween, ys, ys.includes(2017) ? 2017 : ys[0]);
+  }
+
+  function syncStateDropdowns(){
+    populateSelect(elStateWithin, STATES, "Oregon");
+    populateSelect(elStateA, STATES, "Texas");
+    populateSelect(elStateB, STATES, "Oregon");
+  }
+
+  // ----------------------------
+  // 5) Render outputs
+  // ----------------------------
+  function renderWithin(dsId){
+    const state = elStateWithin.value;
+    const yearA = Number(elYearA.value);
+    const yearB = Number(elYearB.value);
+
+    const A = getMetrics(dsId, state, yearA);
+    const B = getMetrics(dsId, state, yearB);
+
+    elContextPill.textContent = `Dataset: ${dsId} | ${state} | ${yearA} vs ${yearB}`;
+
+    // KPI cards
+    const dTrips = B.avgTrips - A.avgTrips;
+    const dTime  = B.avgTime  - A.avgTime;
+
+    elKpiWrap.innerHTML = `
+      <div class="kpi">
+        <div class="title">Average trip frequency <span class="pill">trips/person/day</span></div>
+        <div class="value">${A.avgTrips} → ${B.avgTrips}</div>
+        <div class="delta">Change: ${signed(dTrips,2)} (${A.avgTrips ? signed((dTrips/A.avgTrips)*100,1) : "—"}%)</div>
+      </div>
+      <div class="kpi">
+        <div class="title">Average daily travel time <span class="pill">min/person/day</span></div>
+        <div class="value">${A.avgTime} → ${B.avgTime}</div>
+        <div class="delta">Change: ${signed(dTime,1)} (${A.avgTime ? signed((dTime/A.avgTime)*100,1) : "—"}%)</div>
+      </div>
+    `;
+
+    // Mode table
+    const rows = MODES.map(m => {
+      const a = A.mode[m];
+      const b = B.mode[m];
+      const d = b - a;
+      return `
+        <tr>
+          <td><b>${m}</b></td>
+          <td>${pct(a)}</td>
+          <td>${pct(b)}</td>
+          <td>${(d>=0?"+":"") + (d*100).toFixed(1)}%</td>
+        </tr>
+      `;
+    }).join("");
+
+    elModeTable.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Mode</th>
+            <th>${yearA}</th>
+            <th>${yearB}</th>
+            <th>Change (B−A)</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function renderBetween(dsId){
+    const stateA = elStateA.value;
+    const stateB = elStateB.value;
+    const year = Number(elYearBetween.value);
+
+    const A = getMetrics(dsId, stateA, year);
+    const B = getMetrics(dsId, stateB, year);
+
+    elContextPill.textContent = `Dataset: ${dsId} | ${year} | ${stateA} vs ${stateB}`;
+
+    // KPI cards (State B - State A)
+    const dTrips = B.avgTrips - A.avgTrips;
+    const dTime  = B.avgTime  - A.avgTime;
+
+    elKpiWrap.innerHTML = `
+      <div class="kpi">
+        <div class="title">Average trip frequency <span class="pill">trips/person/day</span></div>
+        <div class="value">${stateA}: ${A.avgTrips} → ${stateB}: ${B.avgTrips}</div>
+        <div class="delta">Difference (B−A): ${signed(dTrips,2)} (${A.avgTrips ? signed((dTrips/A.avgTrips)*100,1) : "—"}%)</div>
+      </div>
+      <div class="kpi">
+        <div class="title">Average daily travel time <span class="pill">min/person/day</span></div>
+        <div class="value">${stateA}: ${A.avgTime} → ${stateB}: ${B.avgTime}</div>
+        <div class="delta">Difference (B−A): ${signed(dTime,1)} (${A.avgTime ? signed((dTime/A.avgTime)*100,1) : "—"}%)</div>
+      </div>
+    `;
+
+    // Mode table
+    const rows = MODES.map(m => {
+      const a = A.mode[m];
+      const b = B.mode[m];
+      const d = b - a;
+      return `
+        <tr>
+          <td><b>${m}</b></td>
+          <td>${stateA}: ${pct(a)}</td>
+          <td>${stateB}: ${pct(b)}</td>
+          <td>${(d>=0?"+":"") + (d*100).toFixed(1)}%</td>
+        </tr>
+      `;
+    }).join("");
+
+    elModeTable.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Mode</th>
+            <th>${stateA} (${year})</th>
+            <th>${stateB} (${year})</th>
+            <th>Difference (B−A)</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function render(){
+    const dsId = elDataset.value;
+    const type = elCompareType.value;
+
+    if (type === "within") {
+      renderWithin(dsId);
+    } else {
+      renderBetween(dsId);
+    }
+  }
+
+  function onCompareTypeChange(){
+    const type = elCompareType.value;
+    if (type === "within") {
+      withinControls.classList.remove("hide");
+      betweenControls.classList.add("hide");
+    } else {
+      withinControls.classList.add("hide");
+      betweenControls.classList.remove("hide");
+    }
+    render();
+  }
+
+  // ----------------------------
+  // 6) Initialize
+  // ----------------------------
+  populateDatasetSelect();
+  syncStateDropdowns();
+  syncYearDropdowns();
+
+  elDataset.addEventListener("change", () => {
+    syncYearDropdowns();
+    render();
+  });
+
+  elCompareType.addEventListener("change", onCompareTypeChange);
+
+  // Within listeners
+  elStateWithin.addEventListener("change", render);
+  elYearA.addEventListener("change", render);
+  elYearB.addEventListener("change", render);
+
+  // Between listeners
+  elStateA.addEventListener("change", render);
+  elStateB.addEventListener("change", render);
+  elYearBetween.addEventListener("change", render);
+
+  // First render
+  onCompareTypeChange();
+</script>
+</body>
+</html>
